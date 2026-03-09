@@ -1,10 +1,11 @@
 ﻿using System;
 
-public interface ICustomer
+public interface IMatch
 {
 	int matchId { get; set; }
-	ITeam teamA { get; set; }
-	ITeam teamB { get; set; }
-	IStadium stadium { get; set; }
-	float ticketPrice { get; set; }
+	int teamAId { get; set; }
+	int teamBId { get; set; }
+	int stadiumId { get; set; }
+	int numberOfSeatsAvailable { get; set; }
+    float ticketPrice { get; set; }
 }

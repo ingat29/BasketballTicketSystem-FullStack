@@ -3,5 +3,5 @@
 public interface ICustomer
 {
 	int customerId { get; set; }
-	string name { get; set; }
+    string fullName { get; set; }
 }
