@@ -3,5 +3,5 @@
 public interface IMatchRepository : IRepository<int, IMatch>
 {
     List<IMatch> FindAllAvailableMatchesOrderedDescending();
-    List<Imatch> FindAvailableMatchesOrderedDescending(int minSeats);
+    List<IMatch> FindAvailableMatchesOrderedDescending(int minSeats);
 }
