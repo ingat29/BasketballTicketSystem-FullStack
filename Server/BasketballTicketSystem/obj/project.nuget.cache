@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "1zrRpNxMKCk=",
+  "success": true,
+  "projectFilePath": "D:\\VisualStudio Projects\\MPP-PA\\BasketballTicketSystem\\BasketballTicketSystem\\BasketballTicketSystem.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\david\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\mysqlconnector\\2.5.0\\mysqlconnector.2.5.0.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\nlog\\6.1.1\\nlog.6.1.1.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\system.configuration.configurationmanager\\10.0.5\\system.configuration.configurationmanager.10.0.5.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.5\\system.diagnostics.eventlog.10.0.5.nupkg.sha512",
+    "C:\\Users\\david\\.nuget\\packages\\system.security.cryptography.protecteddata\\10.0.5\\system.security.cryptography.protecteddata.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

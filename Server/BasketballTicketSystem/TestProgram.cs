@@ -10,7 +10,7 @@ class TestProgram {
             var employees = employeeRepo.FindAll();
 
             Console.WriteLine($"Success! Connected to the database and found {employees.Count} employees.");
-            Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output!");
+            Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output.");
         }
         catch (Exception ex) {
             Console.WriteLine("Something went wrong:");
