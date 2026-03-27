@@ -1,55 +1,25 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
+﻿### --- C# / .NET --- ###
 .vs/
-/.vs
-/BasketballTicketSystem/BasketballTicketSystem/obj
-/BasketballTicketSystem/.vs/BasketballTicketSystem.slnx
-/BasketballTicketSystem/BasketballTicketSystem/bin/Debug/net10.0
-/BasketballTicketSystem/.vs
+Server/.vs/
+Server/**/obj/
+Server/**/bin/
+*.user
+*.userosscache
+*.sln.docstates
 
-#This is the files needed to be ignored from Intellij/Java/Gradle
-
-.gradle
+### --- Java / Gradle --- ###
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-.kotlin
+.kotlin/
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+### --- IntelliJ IDEA --- ###
+.idea/
 *.iws
 *.iml
 *.ipr
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+### --- Altele --- ###
 .vscode/
-
-### Mac OS ###
 .DS_Store
