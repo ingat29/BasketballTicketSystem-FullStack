@@ -7,15 +7,15 @@ public class Match extends Entity<Integer> {
     private Team teamB;
     private Stadium stadium;
     private LocalDateTime matchDate;
-    private double ticketPrice;
+    private float ticketPrice;
     private int availableSeats;
 
-    public Match(Integer id, Team teamA, Team teamB, Stadium stadium, LocalDateTime matchDate, double ticketPrice, int availableSeats) {
+    public Match(Integer id, Team teamA, Team teamB, Stadium stadium, LocalDateTime matchDate, float ticketPrice, int availableSeats) {
         super(id);
         this.teamA = teamA;
         this.teamB = teamB;
         this.stadium = stadium;
-        this.matchDate = matchDate;
+//        this.matchDate = matchDate;
         this.ticketPrice = ticketPrice;
         this.availableSeats = availableSeats;
     }
@@ -30,11 +30,11 @@ public class Match extends Entity<Integer> {
     public Stadium getStadium() { return stadium; }
     public void setStadium(Stadium stadium) { this.stadium = stadium; }
 
-    public LocalDateTime getMatchDate() { return matchDate; }
-    public void setMatchDate(LocalDateTime matchDate) { this.matchDate = matchDate; }
+//    public LocalDateTime getMatchDate() { return matchDate; }
+//    public void setMatchDate(LocalDateTime matchDate) { this.matchDate = matchDate; }
 
-    public double getTicketPrice() { return ticketPrice; }
-    public void setTicketPrice(double ticketPrice) { this.ticketPrice = ticketPrice; }
+    public float getTicketPrice() { return ticketPrice; }
+    public void setTicketPrice(float ticketPrice) { this.ticketPrice = ticketPrice; }
 
     public int getAvailableSeats() { return availableSeats; }
     public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
