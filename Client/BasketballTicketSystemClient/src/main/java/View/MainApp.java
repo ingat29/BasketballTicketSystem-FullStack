@@ -86,12 +86,12 @@ public class MainApp extends Application {
         ticketingSection.setDisable(true); // Disabled until logged in
 
         HBox buyBox = new HBox(10);
-        TextField customerNameField = new TextField();
-        customerNameField.setPromptText("Customer Name");
+        TextField customerIdField = new TextField(); // Renamed variable
+        customerIdField.setPromptText("Customer ID (e.g., 1)"); // Changed prompt
         Spinner<Integer> seatSpinner = new Spinner<>(1, 10, 1);
         Button buyBtn = new Button("Buy Ticket");
 
-        buyBox.getChildren().addAll(new Label("Customer:"), customerNameField, new Label("Seats:"), seatSpinner, buyBtn);
+        buyBox.getChildren().addAll(new Label("Customer ID:"), customerIdField, new Label("Seats:"), seatSpinner, buyBtn);
 
         statusLabel = new Label("Please log in to sell tickets.");
         ticketingSection.getChildren().addAll(buyBox, statusLabel);
@@ -126,15 +126,23 @@ public class MainApp extends Application {
         buyBtn.setOnAction(e -> {
             Match selectedMatch = matchTable.getSelectionModel().getSelectedItem();
             try {
-                controller.buyTicket(selectedMatch, customerNameField.getText(), seatSpinner.getValue());
-                statusLabel.setText("Ticket purchased successfully for " + customerNameField.getText() + "!");
-                refreshTable(); // Refresh to show updated available seats
-                customerNameField.clear();
+                // Parse the text from the field into an Integer
+                int customerId = Integer.parseInt(customerIdField.getText());
+
+                // Call controller with the integer ID
+                controller.buyTicket(selectedMatch, customerId, seatSpinner.getValue());
+
+                statusLabel.setText("Ticket purchased successfully for Customer ID " + customerId + "!");
+                refreshTable();
+                customerIdField.clear();
+
+            } catch (NumberFormatException nfe) {
+                // This catches the error if the text field is empty or has letters
+                statusLabel.setText("Error: Customer ID must be a valid number!");
             } catch (Exception ex) {
                 statusLabel.setText("Error: " + ex.getMessage());
             }
         });
-
         Scene scene = new Scene(root, 800, 500);
         primaryStage.setTitle("Basketball Ticket System (HA-2)");
         primaryStage.setScene(scene);
