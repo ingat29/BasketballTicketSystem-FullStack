@@ -3,4 +3,5 @@ import Model.Customer;
 
 public interface ICustomerRepository extends IRepository<Integer, Customer> {
     Customer findByName(String name);
+    Customer findById(Integer id);
 }

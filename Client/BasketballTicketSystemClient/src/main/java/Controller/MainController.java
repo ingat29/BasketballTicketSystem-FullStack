@@ -12,7 +12,6 @@ public class MainController {
     private MatchService matchService;
     private TicketService ticketService;
 
-    // Keeps track of the logged-in user
     private Employee loggedInEmployee = null;
 
     public MainController(EmployeeService employeeService, MatchService matchService, TicketService ticketService) {
@@ -39,25 +38,23 @@ public class MainController {
     }
 
     public List<Match> getAvailableMatches() {
-        // Fetch matches from the service to display in the UI
         return matchService.getAllAvailableMatches();
     }
 
-    public void buyTicket(Match match, String customerName, int seats) throws Exception {
+    public void buyTicket(Match match, Integer customerId, int seats) throws Exception {
         if (loggedInEmployee == null) {
             throw new Exception("You must be logged in to sell tickets!");
         }
         if (match == null) {
             throw new Exception("Please select a match first!");
         }
-        if (customerName == null || customerName.trim().isEmpty()) {
-            throw new Exception("Customer name cannot be empty!");
+        if (customerId == null || customerId == 0) {
+            throw new Exception("Customer id cannot be empty or zero!");
         }
         if (seats <= 0) {
             throw new Exception("Number of seats must be greater than 0!");
         }
 
-        // Call the service to handle the complex business logic
-        ticketService.buyTicket(match, customerName, seats);
+        ticketService.buyTicket(match, customerId, seats);
     }
 }

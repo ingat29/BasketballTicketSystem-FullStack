@@ -25,7 +25,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // 1. Initialize Dummy Repositories
+        //Initialize Dummy Repositories
         EmployeeInMemoryRepository employeeRepo = new EmployeeInMemoryRepository();
         MatchInMemoryRepository matchRepo = new MatchInMemoryRepository();
         CustomerInMemoryRepository customerRepo = new CustomerInMemoryRepository();
@@ -33,19 +33,19 @@ public class MainApp extends Application {
         StadiumInMemoryRepository stadiumRepo = new StadiumInMemoryRepository();
         TeamInMemoryRepository teamRepo = new TeamInMemoryRepository();
 
-        // 2. Initialize Services
+        //Initialize Services
         EmployeeService employeeService = new EmployeeService(employeeRepo);
         MatchService matchService = new MatchService(matchRepo);
         TicketService ticketService = new TicketService(ticketRepo, matchRepo, customerRepo);
 
-        // 3. Initialize Controller
+        //Initialize Controller
         controller = new MainController(employeeService, matchService, ticketService);
 
-        // 4. Build the UI
+        //Build the UI
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
-        // --- TOP: Login Section ---
+        //TOP
         HBox loginSection = new HBox(10);
         TextField userField = new TextField();
         userField.setPromptText("Username (e.g., employee1)");
@@ -59,7 +59,7 @@ public class MainApp extends Application {
         loginSection.getChildren().addAll(new Label("Login:"), userField, passField, loginBtn, logoutBtn, userLabel);
         root.setTop(loginSection);
 
-        // --- CENTER: Match Table ---
+        //CENTER
         matchTable = new TableView<>();
 
         TableColumn<Match, String> teamACol = new TableColumn<>("Team A");
@@ -80,7 +80,7 @@ public class MainApp extends Application {
         matchTable.getColumns().addAll(teamACol, teamBCol, stadiumCol, priceCol, seatsCol);
         root.setCenter(matchTable);
 
-        // --- BOTTOM: Ticketing Section ---
+        //BOTTOM
         ticketingSection = new VBox(10);
         ticketingSection.setPadding(new Insets(10, 0, 0, 0));
         ticketingSection.setDisable(true); // Disabled until logged in
@@ -98,7 +98,7 @@ public class MainApp extends Application {
 
         root.setBottom(ticketingSection);
 
-        // 5. Button Actions (Event Listeners)
+        //Button Actions
         loginBtn.setOnAction(e -> {
             boolean success = controller.login(userField.getText(), passField.getText());
             if (success) {
@@ -135,7 +135,6 @@ public class MainApp extends Application {
             }
         });
 
-        // 6. Final Window Setup
         Scene scene = new Scene(root, 800, 500);
         primaryStage.setTitle("Basketball Ticket System (HA-2)");
         primaryStage.setScene(scene);

@@ -16,4 +16,12 @@ public class CustomerInMemoryRepository extends InMemoryRepository<Integer, Cust
                 .findFirst()
                 .orElse(null);
     }
+
+    @Override
+    public Customer findById(Integer id){
+        return entities.values().stream()
+                .filter(c -> c.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
 }

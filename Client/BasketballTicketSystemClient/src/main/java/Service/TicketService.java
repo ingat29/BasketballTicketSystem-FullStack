@@ -18,26 +18,21 @@ public class TicketService {
         this.customerRepository = customerRepository;
     }
 
-    public Ticket buyTicket(Match match, String customerName, int numberOfSeats) throws Exception {
+    public Ticket buyTicket(Match match, /* String customerName */Integer customerId, int numberOfSeats) throws Exception {
         //Check if there are enough seats
         if (match.getAvailableSeats() < numberOfSeats) {
             throw new Exception("Not enough available seats for this match!");
         }
 
-        //Find or create the customer
-        Customer customer = customerRepository.findByName(customerName);
+        Customer customer = customerRepository.findById(customerId);
         if (customer == null) {
-            // Generate a fake ID for the dummy repository
-            int newCustomerId = customerRepository.findAll().size() + 1;
-            customer = new Customer(newCustomerId, customerName);
-            customerRepository.add(customer);
+            return null;
+            //Or throw error
         }
 
-        //Decrease the available seats and update the Match
         match.setAvailableSeats(match.getAvailableSeats() - numberOfSeats);
         matchRepository.update(match);
 
-        //Create and save the new Ticket
         int newTicketId = ticketRepository.findAll().size() + 1;
         Ticket newTicket = new Ticket(newTicketId, match, customer, numberOfSeats);
         ticketRepository.add(newTicket);
