@@ -2,15 +2,87 @@ syntax = "proto3";
 
 option java_package = "Networking.Protobuf";
 option java_outer_classname = "BasketballProto";
-
 option csharp_namespace = "BasketballTicketSystem.Networking.Protobuf";
+
+// 1. DOMAIN MODELS (DTOs)
+
+message MatchDto {
+    int32 match_id = 1;
+    int32 team_a_id = 2;
+    int32 team_b_id = 3;
+    int32 stadium_id = 4;
+    int32 number_of_seats_available = 5;
+    float ticket_price = 6;
+}
+
+message TicketDto {
+    int32 ticket_id = 1;
+    int32 match_id = 2;
+    int32 customer_id = 3;
+    int32 number_of_seats = 4;
+}
+
+// 2. SPECIFIC REQUESTS (Client -> Server)
 
 message LoginRequest {
     string username = 1;
     string password = 2;
 }
 
+// Covers both getAllAvailableMatches() and getAvailableMatches(minSeats)
+message GetMatchesRequest {
+    int32 min_seats = 1; // Send 0 if you want all matches
+}
+
+// Covers buyTicket(match, customerId, numberOfSeats)
+message BuyTicketRequest {
+    int32 match_id = 1;
+    int32 customer_id = 2;
+    int32 number_of_seats = 3;
+}
+
+// 3. SPECIFIC RESPONSES (Server -> Client)
+
 message LoginResponse {
     bool success = 1;
     string error_message = 2;
+}
+
+message GetMatchesResponse {
+    // 'repeated' is Protobuf's version of a List or Array
+    repeated MatchDto matches = 1;
+}
+
+message BuyTicketResponse {
+    bool success = 1;
+    string error_message = 2;
+    TicketDto purchased_ticket = 3; // Returns the generated ticket if successful
+}
+
+// (Client Notification)
+message UpdateNotification {
+    MatchDto updated_match = 1;
+}
+
+// 4. THE ENVELOPES (For Sockets)
+
+// The Client will ALWAYS send a "Request" over the socket.
+message Request {
+    oneof payload {
+        LoginRequest login = 1;
+        GetMatchesRequest get_matches = 2;
+        BuyTicketRequest buy_ticket = 3;
+    }
+}
+
+// The Server will ALWAYS send a "Response" over the socket.
+message Response {
+    oneof payload {
+        LoginResponse login = 1;
+        GetMatchesResponse get_matches = 2;
+        BuyTicketResponse buy_ticket = 3;
+
+        // This allows the server to spontaneously send an update to the client
+        UpdateNotification update = 4;
+    }
 }
