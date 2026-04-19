@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "Networking.Protobuf";
+option java_outer_classname = "BasketballProto";
+
+option csharp_namespace = "BasketballTicketSystem.Networking.Protobuf";
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    bool success = 1;
+    string error_message = 2;
+}
