@@ -39,24 +39,24 @@ class TestProgram {
         }
     }
 
-    static void Main(string[] args) {
-        Console.WriteLine("Starting Database Test");
+    //static void Main(string[] args) {
+    //    Console.WriteLine("Starting Database Test");
 
-        try {
-            IEmployeeRepository employeeRepo = new EmployeeDBRepository();
+    //    try {
+    //        IEmployeeRepository employeeRepo = new EmployeeDBRepository();
 
-            var employees = employeeRepo.FindAll();
+    //        var employees = employeeRepo.FindAll();
 
-            Console.WriteLine($"Success! Connected to the database and found {employees.Count} employees.");
-            Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output.");
+    //        Console.WriteLine($"Success! Connected to the database and found {employees.Count} employees.");
+    //        Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output.");
         
-            SocketTest.RunServer();
-        }
-        catch (Exception ex) {
-            Console.WriteLine("Something went wrong:");
-            Console.WriteLine(ex.Message);
-        }
+    //        SocketTest.RunServer();
+    //    }
+    //    catch (Exception ex) {
+    //        Console.WriteLine("Something went wrong:");
+    //        Console.WriteLine(ex.Message);
+    //    }
 
-        Console.ReadLine();
-    }
+    //    Console.ReadLine();
+    //}
 }
