@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class TicketInMemoryRepository extends InMemoryRepository<Integer, Ticket> implements ITicketRepository {
 
     public TicketInMemoryRepository() {
-        Model.Match m1 = new Model.Match(1, new Model.Team(1, "Lakers"), new Model.Team(2, "Bulls"), new Model.Stadium(1, "Crypto.com Arena", 20000), java.time.LocalDateTime.now(), 50.0f, 20000);
+        Model.Match m1 = new Model.Match(1, new Model.Team(1, "Lakers"), new Model.Team(2, "Bulls"), new Model.Stadium(1, "Crypto.com Arena", 20000), 50.0f, 20000);
 
         this.add(new Model.Ticket(1, m1, new Model.Customer(1, "Customer Name 1"), 2));
         this.add(new Model.Ticket(2, m1, new Model.Customer(2, "Customer Name 2"), 4));

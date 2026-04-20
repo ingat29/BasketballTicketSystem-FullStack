@@ -10,7 +10,7 @@ public class Match extends Entity<Integer> {
     private float ticketPrice;
     private int availableSeats;
 
-    public Match(Integer id, Team teamA, Team teamB, Stadium stadium, LocalDateTime matchDate, float ticketPrice, int availableSeats) {
+    public Match(Integer id, Team teamA, Team teamB, Stadium stadium /* ,LocalDateTime matchDate */, float ticketPrice, int availableSeats) {
         super(id);
         this.teamA = teamA;
         this.teamB = teamB;

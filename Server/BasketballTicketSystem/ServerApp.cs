@@ -13,15 +13,36 @@ public class ServerApp {
     private IMatchRepository _matchRepo;
     private ITicketRepository _ticketRepo;
     private ICustomerRepository _customerRepo;
+    private ITeamRepository _teamRepo;
+    private IStadiumRepository _stadiumRepo;
 
-    // Here i will eventually pass the Repositories/Services into this class
-    public ServerApp(IEmployeeRepository employeeRepo, IMatchRepository matchRepo, ITicketRepository ticketRepo, ICustomerRepository customerRepo) {
-        _employeeRepo = employeeRepo;
+    public ServerApp(IEmployeeRepository empRepo, IMatchRepository matchRepo,
+                     ITicketRepository ticketRepo, ICustomerRepository custRepo,
+                     ITeamRepository teamRepo, IStadiumRepository stadiumRepo) {
+        _employeeRepo = empRepo;
         _matchRepo = matchRepo;
         _ticketRepo = ticketRepo;
-        _customerRepo = customerRepo;
+        _customerRepo = custRepo;
+        _teamRepo = teamRepo;
+        _stadiumRepo = stadiumRepo;
 
         _listener = new TcpListener(IPAddress.Any, 5555);
+    }
+
+    private MatchDto BuildMatchDto(IMatch dbMatch) {
+
+        ITeam teamA = _teamRepo.FindById(dbMatch.teamAId);
+        ITeam teamB = _teamRepo.FindById(dbMatch.teamBId);
+        IStadium stadium = _stadiumRepo.FindById(dbMatch.stadiumId);
+
+        return new MatchDto {
+            MatchId = dbMatch.matchId,
+            TeamA = new TeamDto { TeamId = teamA.teamId, Name = teamA.name },
+            TeamB = new TeamDto { TeamId = teamB.teamId, Name = teamB.name },
+            Stadium = new StadiumDto { StadiumId = stadium.stadiumId, Name = stadium.name, Capacity = stadium.capacity },
+            NumberOfSeatsAvailable = dbMatch.numberOfSeatsAvailable,
+            TicketPrice = dbMatch.ticketPrice
+        };
     }
 
     public void Start() {
@@ -110,28 +131,15 @@ public class ServerApp {
     }
 
     private Response HandleGetMatches(GetMatchesRequest req) {
-        List<IMatch> dbMatches;
-        if (req.MinSeats > 0) {
-            dbMatches = _matchRepo.FindAvailableMatchesOrderedDescending(req.MinSeats);
-        }
-        else {
-            dbMatches = _matchRepo.FindAllAvailableMatchesOrderedDescending();
-        }
+        List<IMatch> dbMatches = req.MinSeats > 0
+            ? _matchRepo.FindAvailableMatchesOrderedDescending(req.MinSeats)
+            : _matchRepo.FindAllAvailableMatchesOrderedDescending();
 
         GetMatchesResponse responseData = new GetMatchesResponse();
-        
-        // Translate from C# DB Model to Protobuf DTO
+
         foreach (IMatch dbMatch in dbMatches) {
-            MatchDto dto = new MatchDto {
-                MatchId = dbMatch.matchId,
-                TeamAId = dbMatch.teamAId,
-                TeamBId = dbMatch.teamBId,
-                StadiumId = dbMatch.stadiumId,
-                NumberOfSeatsAvailable = dbMatch.numberOfSeatsAvailable,
-                TicketPrice = dbMatch.ticketPrice
-            };
-            
-            responseData.Matches.Add(dto);
+            // Use our beautiful new helper method!
+            responseData.Matches.Add(BuildMatchDto(dbMatch));
         }
 
         return new Response { GetMatches = responseData };
@@ -141,12 +149,7 @@ public class ServerApp {
         IMatch match = _matchRepo.FindById(req.MatchId);
 
         if (match == null || match.numberOfSeatsAvailable < req.NumberOfSeats) {
-            return new Response {
-                BuyTicket = new BuyTicketResponse {
-                    Success = false,
-                    ErrorMessage = "Not enough available seats or invalid match!"
-                }
-            };
+            return new Response { BuyTicket = new BuyTicketResponse { Success = false, ErrorMessage = "Not enough seats!" } };
         }
 
         match.numberOfSeatsAvailable -= req.NumberOfSeats;
@@ -157,8 +160,9 @@ public class ServerApp {
             customerId = req.CustomerId,
             numberOfSeats = req.NumberOfSeats
         };
-
         ITicket savedTicket = _ticketRepo.Add(newTicket);
+
+        ICustomer customer = _customerRepo.FindById(req.CustomerId);
 
         return new Response {
             BuyTicket = new BuyTicketResponse {
@@ -166,8 +170,8 @@ public class ServerApp {
                 ErrorMessage = "",
                 PurchasedTicket = new TicketDto {
                     TicketId = savedTicket.ticketId,
-                    MatchId = savedTicket.matchId,
-                    CustomerId = savedTicket.customerId,
+                    Match = BuildMatchDto(match),
+                    Customer = new CustomerDto { CustomerId = customer.customerId, Name = customer.fullName },
                     NumberOfSeats = savedTicket.numberOfSeats
                 }
             }

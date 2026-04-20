@@ -22,16 +22,16 @@ public class MatchInMemoryRepository extends InMemoryRepository<Integer, Match> 
 
         java.time.LocalDateTime date = java.time.LocalDateTime.now();
 
-        this.add(new Model.Match(1, t1, t2, s1, date, 50.0f, 20000));
-        this.add(new Model.Match(2, t3, t4, s3, date, 75.5f, 19500));
-        this.add(new Model.Match(3, t5, t6, s2, date, 40.0f, 21000));
-        this.add(new Model.Match(4, t1, t3, s1, date, 100.0f, 500)); // Almost sold out
-        this.add(new Model.Match(5, t2, t4, s2, date, 45.0f, 15000));
-        this.add(new Model.Match(6, t5, t1, s3, date, 60.0f, 100)); // Almost sold out
-        this.add(new Model.Match(7, t6, t2, s1, date, 35.0f, 20000));
-        this.add(new Model.Match(8, t4, t5, s2, date, 55.0f, 0));   // Sold out
-        this.add(new Model.Match(9, t3, t6, s3, date, 80.0f, 5000));
-        this.add(new Model.Match(10, t1, t4, s1, date, 120.0f, 10)); // VIP match
+        this.add(new Model.Match(1, t1, t2, s1,  50.0f, 20000));
+        this.add(new Model.Match(2, t3, t4, s3,  75.5f, 19500));
+        this.add(new Model.Match(3, t5, t6, s2,  40.0f, 21000));
+        this.add(new Model.Match(4, t1, t3, s1,  100.0f, 500)); // Almost sold out
+        this.add(new Model.Match(5, t2, t4, s2,  45.0f, 15000));
+        this.add(new Model.Match(6, t5, t1, s3,  60.0f, 100)); // Almost sold out
+        this.add(new Model.Match(7, t6, t2, s1,  35.0f, 20000));
+        this.add(new Model.Match(8, t4, t5, s2,  55.0f, 0));   // Sold out
+        this.add(new Model.Match(9, t3, t6, s3,  80.0f, 5000));
+        this.add(new Model.Match(10, t1, t4, s1, 120.0f, 10)); // VIP match
     }
 
     @Override

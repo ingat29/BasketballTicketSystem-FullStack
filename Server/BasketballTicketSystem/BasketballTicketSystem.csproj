@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <StartupObject>TestProgram</StartupObject>
+    <StartupObject>BasketballTicketSystem.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

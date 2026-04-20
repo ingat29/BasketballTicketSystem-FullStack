@@ -11,8 +11,10 @@ namespace BasketballTicketSystem {
             IMatchRepository matchRepo = new MatchDBRepository();
             ITicketRepository ticketRepo = new TicketDBRepository();
             ICustomerRepository customerRepo = new CustomerDBRepository();
+            ITeamRepository teamRepo = new TeamDBRepository();
+            IStadiumRepository stadiumRepo = new StadiumDBRepository();
 
-            ServerApp server = new ServerApp(employeeRepo, matchRepo, ticketRepo, customerRepo);
+            ServerApp server = new ServerApp(employeeRepo, matchRepo, ticketRepo, customerRepo, teamRepo, stadiumRepo);
 
             Thread serverThread = new Thread(() => server.Start());
             serverThread.Start();
