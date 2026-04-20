@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("application")//allows Gradle to run the app
     id("org.openjfx.javafxplugin") version "0.1.0"//the official javafx plugin
+    id("com.google.protobuf") version "0.9.4"
 }
 
 group = "org.example"
@@ -31,4 +32,21 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+protobuf {
+    protoc {
+        // This tells Gradle to download the exact compiler version automatically
+        artifact = "com.google.protobuf:protoc:3.25.1"
+    }
+}
+
+// This tells Gradle where the .proto file is located
+sourceSets {
+    main {
+        // Look two folders up for the shared "Proto" directory
+        extensions.configure<org.gradle.api.file.SourceDirectorySet>("proto") {
+            srcDir("../../Proto")
+        }
+    }
 }
