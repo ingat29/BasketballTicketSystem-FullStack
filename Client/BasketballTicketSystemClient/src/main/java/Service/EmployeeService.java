@@ -1,17 +1,26 @@
 package Service;
 
 import Model.Employee;
-import Repository.Interfaces.IEmployeeRepository; // Or EmployeeRepository depending on what you named it
+import Model.EmployeeId;
+import Networking.ServerProxy;
 
 public class EmployeeService {
-    private IEmployeeRepository employeeRepository;
+    private ServerProxy proxy;
 
-    public EmployeeService(IEmployeeRepository employeeRepository) {
-        this.employeeRepository = employeeRepository;
+    public EmployeeService(ServerProxy proxy) {
+        this.proxy = proxy;
     }
 
     public Employee login(String username, String password) {
-        //Returns the Employee if found, or null if credentials are wrong
-        return employeeRepository.findByUsernameAndPassword(username, password);
+        try {
+            boolean success = proxy.login(username, password);
+            if (success) {
+                // Return a dummy employee object just so the controller knows it was successful
+                return new Employee(new EmployeeId(username, password), username, password, username);
+            }
+        } catch (Exception e) {
+            System.err.println("Login failed: " + e.getMessage());
+        }
+        return null;
     }
 }

@@ -1,21 +1,31 @@
 package Service;
 
 import Model.Match;
-import Repository.Interfaces.IMatchRepository;
+import Networking.ServerProxy;
 import java.util.List;
 
 public class MatchService {
-    private IMatchRepository matchRepository;
+    private ServerProxy proxy;
 
-    public MatchService(IMatchRepository matchRepository) {
-        this.matchRepository = matchRepository;
+    public MatchService(ServerProxy proxy) {
+        this.proxy = proxy;
     }
 
     public List<Match> getAllAvailableMatches() {
-        return matchRepository.findAllAvailableMatchesOrderedDescending();
+        try {
+            return proxy.getAvailableMatches(0);
+        } catch (Exception e) {
+            System.err.println("Failed to fetch matches: " + e.getMessage());
+            return null;
+        }
     }
 
     public List<Match> getAvailableMatches(int minSeats) {
-        return matchRepository.findAvailableMatchesOrderedDescending(minSeats);
+        try {
+            return proxy.getAvailableMatches(minSeats);
+        } catch (Exception e) {
+            System.err.println("Failed to fetch matches: " + e.getMessage());
+            return null;
+        }
     }
 }

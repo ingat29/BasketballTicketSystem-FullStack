@@ -2,7 +2,7 @@ package View;
 
 import Controller.MainController;
 import Model.Match;
-import Repository.*;
+import Networking.ServerProxy;
 import Service.EmployeeService;
 import Service.MatchService;
 import Service.TicketService;
@@ -14,9 +14,12 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class MainApp extends Application {
 
     private MainController controller;
+    private ServerProxy proxy;
 
     // UI Components
     private TableView<Match> matchTable;
@@ -25,32 +28,34 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        //Initialize Dummy Repositories
-        EmployeeInMemoryRepository employeeRepo = new EmployeeInMemoryRepository();
-        MatchInMemoryRepository matchRepo = new MatchInMemoryRepository();
-        CustomerInMemoryRepository customerRepo = new CustomerInMemoryRepository();
-        TicketInMemoryRepository ticketRepo = new TicketInMemoryRepository();
-        StadiumInMemoryRepository stadiumRepo = new StadiumInMemoryRepository();
-        TeamInMemoryRepository teamRepo = new TeamInMemoryRepository();
+        // 1. Initialize and connect the Proxy
+        proxy = new ServerProxy("127.0.0.1", 5555);
+        try {
+            proxy.connect();
+            System.out.println("Successfully connected to the C# Server.");
+        } catch (Exception e) {
+            System.err.println("Failed to connect to server! Is the C# server running?");
+            e.printStackTrace();
+        }
 
-        //Initialize Services
-        EmployeeService employeeService = new EmployeeService(employeeRepo);
-        MatchService matchService = new MatchService(matchRepo);
-        TicketService ticketService = new TicketService(ticketRepo, matchRepo, customerRepo);
+        // 2. Initialize Services with the Proxy (No more InMemory Repositories!)
+        EmployeeService employeeService = new EmployeeService(proxy);
+        MatchService matchService = new MatchService(proxy);
+        TicketService ticketService = new TicketService(proxy);
 
-        //Initialize Controller
+        // 3. Initialize Controller
         controller = new MainController(employeeService, matchService, ticketService);
 
-        //Build the UI
+        // Build the UI
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
-        //TOP
+        // TOP
         HBox loginSection = new HBox(10);
         TextField userField = new TextField();
-        userField.setPromptText("Username (e.g., employee1)");
+        userField.setPromptText("Username (e.g., ingat29)");
         PasswordField passField = new PasswordField();
-        passField.setPromptText("Password (e.g., password1)");
+        passField.setPromptText("Password (e.g., pass)");
         Button loginBtn = new Button("Login");
         Button logoutBtn = new Button("Logout");
         logoutBtn.setDisable(true);
@@ -59,7 +64,7 @@ public class MainApp extends Application {
         loginSection.getChildren().addAll(new Label("Login:"), userField, passField, loginBtn, logoutBtn, userLabel);
         root.setTop(loginSection);
 
-        //CENTER
+        // CENTER
         matchTable = new TableView<>();
 
         TableColumn<Match, String> teamACol = new TableColumn<>("Team A");
@@ -80,14 +85,14 @@ public class MainApp extends Application {
         matchTable.getColumns().addAll(teamACol, teamBCol, stadiumCol, priceCol, seatsCol);
         root.setCenter(matchTable);
 
-        //BOTTOM
+        // BOTTOM
         ticketingSection = new VBox(10);
         ticketingSection.setPadding(new Insets(10, 0, 0, 0));
         ticketingSection.setDisable(true); // Disabled until logged in
 
         HBox buyBox = new HBox(10);
-        TextField customerIdField = new TextField(); // Renamed variable
-        customerIdField.setPromptText("Customer ID (e.g., 1)"); // Changed prompt
+        TextField customerIdField = new TextField();
+        customerIdField.setPromptText("Customer ID (e.g., 1)");
         Spinner<Integer> seatSpinner = new Spinner<>(1, 10, 1);
         Button buyBtn = new Button("Buy Ticket");
 
@@ -98,7 +103,7 @@ public class MainApp extends Application {
 
         root.setBottom(ticketingSection);
 
-        //Button Actions
+        // Button Actions
         loginBtn.setOnAction(e -> {
             boolean success = controller.login(userField.getText(), passField.getText());
             if (success) {
@@ -109,7 +114,7 @@ public class MainApp extends Application {
                 statusLabel.setText("Login successful. Select a match to sell tickets.");
                 refreshTable();
             } else {
-                statusLabel.setText("Invalid credentials!");
+                statusLabel.setText("Invalid credentials or server offline!");
             }
         });
 
@@ -126,10 +131,8 @@ public class MainApp extends Application {
         buyBtn.setOnAction(e -> {
             Match selectedMatch = matchTable.getSelectionModel().getSelectedItem();
             try {
-                // Parse the text from the field into an Integer
                 int customerId = Integer.parseInt(customerIdField.getText());
 
-                // Call controller with the integer ID
                 controller.buyTicket(selectedMatch, customerId, seatSpinner.getValue());
 
                 statusLabel.setText("Ticket purchased successfully for Customer ID " + customerId + "!");
@@ -137,21 +140,33 @@ public class MainApp extends Application {
                 customerIdField.clear();
 
             } catch (NumberFormatException nfe) {
-                // This catches the error if the text field is empty or has letters
                 statusLabel.setText("Error: Customer ID must be a valid number!");
             } catch (Exception ex) {
                 statusLabel.setText("Error: " + ex.getMessage());
             }
         });
+
         Scene scene = new Scene(root, 800, 500);
-        primaryStage.setTitle("Basketball Ticket System (HA-2)");
+        primaryStage.setTitle("Basketball Ticket System (HA-3)");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     private void refreshTable() {
         matchTable.getItems().clear();
-        matchTable.getItems().addAll(controller.getAvailableMatches());
+        List<Match> matches = controller.getAvailableMatches();
+        if (matches != null) {
+            matchTable.getItems().addAll(matches);
+        }
+    }
+
+    // This guarantees the Java app hangs up the socket when you click the 'X' button!
+    @Override
+    public void stop() throws Exception {
+        if (proxy != null) {
+            proxy.disconnect();
+        }
+        super.stop();
     }
 
     public static void main(String[] args) {

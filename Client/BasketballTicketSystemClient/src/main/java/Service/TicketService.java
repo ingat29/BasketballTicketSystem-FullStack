@@ -1,42 +1,24 @@
 package Service;
 
-import Model.Customer;
 import Model.Match;
 import Model.Ticket;
-import Repository.Interfaces.ICustomerRepository;
-import Repository.Interfaces.IMatchRepository;
-import Repository.Interfaces.ITicketRepository;
+import Networking.ServerProxy;
 
 public class TicketService {
-    private ITicketRepository ticketRepository;
-    private IMatchRepository matchRepository;
-    private ICustomerRepository customerRepository;
+    private ServerProxy proxy;
 
-    public TicketService(ITicketRepository ticketRepository, IMatchRepository matchRepository, ICustomerRepository customerRepository) {
-        this.ticketRepository = ticketRepository;
-        this.matchRepository = matchRepository;
-        this.customerRepository = customerRepository;
+    public TicketService(ServerProxy proxy) {
+        this.proxy = proxy;
     }
 
-    public Ticket buyTicket(Match match, /* String customerName */Integer customerId, int numberOfSeats) throws Exception {
-        //Check if there are enough seats
-        if (match.getAvailableSeats() < numberOfSeats) {
-            throw new Exception("Not enough available seats for this match!");
-        }
+    public Ticket buyTicket(Match match, Integer customerId, int numberOfSeats) throws Exception {
+        // The Proxy will throw an exception if there are not enough seats or the database rejects it
+        boolean success = proxy.buyTicket(match.getId(), customerId, numberOfSeats);
 
-        Customer customer = customerRepository.findById(customerId);
-        if (customer == null) {
+        if (success) {
+            // MainController doesn't use the returned Ticket object in its UI, so returning null is fine
             return null;
-            //Or throw error
         }
-
-        match.setAvailableSeats(match.getAvailableSeats() - numberOfSeats);
-        matchRepository.update(match);
-
-        int newTicketId = ticketRepository.findAll().size() + 1;
-        Ticket newTicket = new Ticket(newTicketId, match, customer, numberOfSeats);
-        ticketRepository.add(newTicket);
-
-        return newTicket;
+        return null;
     }
 }
