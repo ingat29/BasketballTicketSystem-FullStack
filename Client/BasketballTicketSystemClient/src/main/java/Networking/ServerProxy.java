@@ -1,5 +1,7 @@
 package Networking;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import Networking.Protobuf.BasketballProto.*;
 import Model.Match;
 import Model.Team;
@@ -17,20 +19,27 @@ public class ServerProxy {
     private InputStream input;
     private OutputStream output;
 
+    private BlockingQueue<Response> responses;
+    private ITicketObserver observer;
+
     public ServerProxy(String host, int port) {
         this.host = host;
         this.port = port;
+        this.responses = new LinkedBlockingQueue<>();
     }
 
-    // =================================================================
-    // 1. CONNECTION MANAGEMENT
-    // =================================================================
+    public void setObserver(ITicketObserver observer) {
+        this.observer = observer;
+    }
+
 
     public void connect() throws Exception {
         if (connection == null || connection.isClosed()) {
             connection = new Socket(host, port);
             output = connection.getOutputStream();
             input = connection.getInputStream();
+            startReaderThread();
+
             System.out.println("Connected to C# Server at " + host + ":" + port);
         }
     }
@@ -45,10 +54,6 @@ public class ServerProxy {
         }
     }
 
-    // =================================================================
-    // 2. NETWORK ACTIONS (The Translators)
-    // =================================================================
-
     public boolean login(String username, String password) throws Exception {
         // Pack
         Request request = Request.newBuilder()
@@ -62,7 +67,7 @@ public class ServerProxy {
 
         // Send & Wait
         request.writeDelimitedTo(output);
-        Response response = Response.parseDelimitedFrom(input);
+        Response response = responses.take();
 
         // Unpack
         if (response.getPayloadCase() == Response.PayloadCase.LOGIN) {
@@ -77,7 +82,6 @@ public class ServerProxy {
     }
 
     public List<Match> getAvailableMatches(int minSeats) throws Exception {
-        // Pack
         Request request = Request.newBuilder()
                 .setGetMatches(
                         GetMatchesRequest.newBuilder()
@@ -86,33 +90,25 @@ public class ServerProxy {
                 )
                 .build();
 
-        // Send & Wait
         request.writeDelimitedTo(output);
-        Response response = Response.parseDelimitedFrom(input);
+        Response response = responses.take();
 
-        // Unpack
         if (response.getPayloadCase() == Response.PayloadCase.GET_MATCHES) {
             GetMatchesResponse matchResp = response.getGetMatches();
             List<Match> javaMatches = new ArrayList<>();
 
-            // THE TRANSLATION LAYER: DTO -> Real Java Models
             for (MatchDto dto : matchResp.getMatchesList()) {
 
-                // 1. Unpack the nested Team A
                 Team teamA = new Team(dto.getTeamA().getTeamId(), dto.getTeamA().getName());
 
-                // 2. Unpack the nested Team B
                 Team teamB = new Team(dto.getTeamB().getTeamId(), dto.getTeamB().getName());
 
-                // 3. Unpack the nested Stadium
                 Stadium stadium = new Stadium(
                         dto.getStadium().getStadiumId(),
                         dto.getStadium().getName(),
                         dto.getStadium().getCapacity()
                 );
 
-                // 4. Construct the final Java Match object!
-                // NOTE: Ensure these parameters match your exact Match.java constructor
                 Match match = new Match(
                         dto.getMatchId(),
                         teamA,
@@ -132,7 +128,6 @@ public class ServerProxy {
     }
 
     public boolean buyTicket(int matchId, int customerId, int numberOfSeats) throws Exception {
-        // Pack
         Request request = Request.newBuilder()
                 .setBuyTicket(
                         BuyTicketRequest.newBuilder()
@@ -143,11 +138,9 @@ public class ServerProxy {
                 )
                 .build();
 
-        // Send & Wait
         request.writeDelimitedTo(output);
-        Response response = Response.parseDelimitedFrom(input);
+        Response response = responses.take();
 
-        // Unpack
         if (response.getPayloadCase() == Response.PayloadCase.BUY_TICKET) {
             BuyTicketResponse buyResp = response.getBuyTicket();
             if (!buyResp.getSuccess()) {
@@ -157,5 +150,37 @@ public class ServerProxy {
         } else {
             throw new Exception("Received unexpected response type from server.");
         }
+    }
+
+    private void startReaderThread() {
+        Thread reader = new Thread(() -> {
+            try {
+                while (true) {
+                    Response response = Response.parseDelimitedFrom(input);
+                    if (response == null) break; // Server disconnected
+
+                    if (response.getPayloadCase() == Response.PayloadCase.UPDATE) {
+                        if (observer != null) {
+                            MatchDto dto = response.getUpdate().getUpdatedMatch();
+
+                            Team teamA = new Team(dto.getTeamA().getTeamId(), dto.getTeamA().getName());
+                            Team teamB = new Team(dto.getTeamB().getTeamId(), dto.getTeamB().getName());
+                            Stadium stadium = new Stadium(dto.getStadium().getStadiumId(), dto.getStadium().getName(), dto.getStadium().getCapacity());
+
+                            Match match = new Match(dto.getMatchId(), teamA, teamB, stadium, dto.getTicketPrice(), dto.getNumberOfSeatsAvailable());
+
+                            observer.matchUpdated(match);
+                        }
+                    } else {
+                        // It's a direct answer to a request (Login, GetMatches, BuyTicket).
+                        responses.put(response);
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Disconnected from server or error reading: " + e.getMessage());
+            }
+        });
+        reader.setDaemon(true); // Ensures the thread dies when the app closes
+        reader.start();
     }
 }

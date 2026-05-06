@@ -3,6 +3,7 @@ package View;
 import Controller.MainController;
 import Model.Match;
 import Networking.ServerProxy;
+import Networking.TicketObserver;
 import Service.EmployeeService;
 import Service.MatchService;
 import Service.TicketService;
@@ -84,6 +85,8 @@ public class MainApp extends Application {
 
         matchTable.getColumns().addAll(teamACol, teamBCol, stadiumCol, priceCol, seatsCol);
         root.setCenter(matchTable);
+
+        proxy.setObserver(new TicketObserver(matchTable));
 
         // BOTTOM
         ticketingSection = new VBox(10);

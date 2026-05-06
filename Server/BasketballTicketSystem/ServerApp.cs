@@ -9,6 +9,9 @@ public class ServerApp {
     private TcpListener _listener;
     private bool _isRunning;
 
+    private readonly object _clientsLock = new object();
+    private List<NetworkStream> _activeClients = new List<NetworkStream>();
+
     private IEmployeeRepository _employeeRepo;
     private IMatchRepository _matchRepo;
     private ITicketRepository _ticketRepo;
@@ -70,29 +73,32 @@ public class ServerApp {
     private void HandleClient(TcpClient client) {
         NetworkStream stream = client.GetStream();
 
+        lock (_clientsLock) {
+            _activeClients.Add(stream);
+        }
+
         try {
-            // Keep listening to this client until they disconnect
             while (true) {
-                // This line will pause and wait until the client sends a message
                 Request req = Request.Parser.ParseDelimitedFrom(stream);
 
-                // If ParseDelimitedFrom returns null, the client disconnected gracefully
                 if (req == null) break;
 
-                // Figure out what the client wants and send a response
                 Response response = ProcessRequest(req);
 
-                // Send the answer back
                 if (response != null) {
                     response.WriteDelimitedTo(stream);
                 }
             }
         }
         catch (Exception ex) {
-            // If the client forcefully closes the app, it throws an exception here
             Console.WriteLine($"Client disconnected abruptly: {ex.Message}");
         }
         finally {
+
+            lock (_clientsLock) { 
+                _activeClients.Remove(stream);
+            }
+
             client.Close();
             Console.WriteLine("Client connection closed.");
         }
@@ -164,6 +170,9 @@ public class ServerApp {
 
         ICustomer customer = _customerRepo.FindById(req.CustomerId);
 
+        //Broadcast the updated match info to all clients so they can update their UI
+        NotifyAllClients(match);
+
         return new Response {
             BuyTicket = new BuyTicketResponse {
                 Success = true,
@@ -176,5 +185,26 @@ public class ServerApp {
                 }
             }
         };
+    }
+
+    private void NotifyAllClients(IMatch updatedMatch) {
+        Response updateResponse = new Response {
+            Update = new UpdateNotification {
+                UpdatedMatch = BuildMatchDto(updatedMatch)
+            }
+        };
+
+        lock (_clientsLock) {
+            // We create a quick copy of the list with .ToList() 
+            // This prevents errors if a client disconnects exactly while we are broadcasting
+            foreach (var stream in _activeClients.ToList()) {
+                try {
+                    updateResponse.WriteDelimitedTo(stream);
+                }
+                catch (Exception ex) {
+                    Console.WriteLine($"Failed to send update to a client: {ex.Message}");
+                }
+            }
+        }
     }
 }

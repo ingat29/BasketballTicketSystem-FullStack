@@ -89,6 +89,6 @@ message Response {
         LoginResponse login = 1;
         GetMatchesResponse get_matches = 2;
         BuyTicketResponse buy_ticket = 3;
-        UpdateNotification update = 4; 
+        UpdateNotification update = 4;
     }
 }

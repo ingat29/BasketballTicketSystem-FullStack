@@ -85,6 +85,7 @@ public class MatchDBRepository : IMatchRepository {
         using (var connection = DatabaseUtils.GetConnection()) {
             connection.Open();
             var command = new MySqlCommand("SELECT * FROM matches WHERE matchId = @matchId", connection);
+            command.Parameters.AddWithValue("@matchId", id);
 
             using (var reader = command.ExecuteReader()) {
                 while (reader.Read()) {
