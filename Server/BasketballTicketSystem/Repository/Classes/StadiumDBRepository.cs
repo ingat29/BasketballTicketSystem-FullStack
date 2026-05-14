@@ -1,68 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using MySqlConnector;
-using NLog;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 public class StadiumDBRepository : IStadiumRepository {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
     public IStadium Add(IStadium stadium) {
-        //Stadium stadium = (Stadium)entity;
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("INSERT INTO Stadiums (name, capacity) VALUES (@name, @capacity)", connection);
-            command.Parameters.AddWithValue("@name", stadium.name);
-            command.Parameters.AddWithValue("@capacity", stadium.capacity);
-            command.ExecuteNonQuery();
-        }
-        return stadium;
+        using (var context = new BasketballContext()) { context.Stadiums.Add((Stadium)stadium); context.SaveChanges(); return stadium; }
     }
-
     public IStadium FindById(int id) {
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM Stadiums WHERE stadiumId = @id", connection);
-            command.Parameters.AddWithValue("@id", id);
-            using (var reader = command.ExecuteReader()) {
-                if (reader.Read()) return new Stadium(reader.GetInt32("stadiumId"), reader.GetString("name"), reader.GetInt32("capacity"));
-            }
-        }
-        return null;
+        using (var context = new BasketballContext()) { return context.Stadiums.Find(id); }
     }
-
     public List<IStadium> FindAll() {
-        var list = new List<IStadium>();
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM Stadiums", connection);
-            using (var reader = command.ExecuteReader()) {
-                while (reader.Read()) list.Add(new Stadium(reader.GetInt32("stadiumId"), reader.GetString("name"), reader.GetInt32("capacity")));
-            }
-        }
-        return list;
+        using (var context = new BasketballContext()) { return context.Stadiums.Cast<IStadium>().ToList(); }
     }
-
     public IStadium Update(IStadium stadium) {
-        //Stadium stadium = (Stadium)entity;
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("UPDATE Stadiums SET name = @name, capacity = @capacity WHERE stadiumId = @id", connection);
-            command.Parameters.AddWithValue("@name", stadium.name);
-            command.Parameters.AddWithValue("@capacity", stadium.capacity);
-            command.Parameters.AddWithValue("@id", stadium.stadiumId);
-            command.ExecuteNonQuery();
-        }
-        return stadium;
+        using (var context = new BasketballContext()) { context.Stadiums.Update((Stadium)stadium); context.SaveChanges(); return stadium; }
     }
-
     public IStadium Delete(int id) {
-        IStadium deletedStadium = FindById(id);
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("DELETE FROM Stadiums WHERE stadiumId = @id", connection);
-            command.Parameters.AddWithValue("@id", id);
-            command.ExecuteNonQuery();
+        using (var context = new BasketballContext()) {
+            var st = context.Stadiums.Find(id);
+            if (st != null) { context.Stadiums.Remove(st); context.SaveChanges(); }
+            return st;
         }
-        return deletedStadium;
     }
 }

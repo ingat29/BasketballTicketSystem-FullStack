@@ -1,110 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
-using MySqlConnector;
+using System.Linq;
 using NLog;
 
-public class EmployeeDBRepository : IEmployeeRepository
-{
+public class EmployeeDBRepository : IEmployeeRepository {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    public EmployeeDBRepository()
-    {
-        logger.Info("Initializing EmployeeDBRepository");
-    }
+    public EmployeeDBRepository() { logger.Info("Initializing EF EmployeeDBRepository"); }
 
-    public IEmployee FindByUsernameAndPassword(string username, string password)
-    {
+    public IEmployee FindByUsernameAndPassword(string username, string password) {
         logger.Info($"Finding employee with username: {username}");
-        using (var connection = DatabaseUtils.GetConnection())
-        {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM employees WHERE username = @user AND password = @pass", connection);
-            command.Parameters.AddWithValue("@user", username);
-            command.Parameters.AddWithValue("@pass", password);
-
-            using (var reader = command.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    return new Employee(reader.GetString("username"), reader.GetString("password"));
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Employees.FirstOrDefault(e => e.username == username && e.password == password);
         }
-        return null;
     }
 
-    public IEmployee Add(IEmployee employee)
-    {
+    public IEmployee Add(IEmployee employee) {
         logger.Info($"Adding employee: {employee.username}");
-        using (var connection = DatabaseUtils.GetConnection())
-        {
-            connection.Open();
-            var command = new MySqlCommand("INSERT INTO employees (username, password) VALUES (@user, @pass)", connection);
-            command.Parameters.AddWithValue("@user", employee.username);
-            command.Parameters.AddWithValue("@pass", employee.password);
-            command.ExecuteNonQuery();
+        using (var context = new BasketballContext()) {
+            context.Employees.Add((Employee)employee);
+            context.SaveChanges();
         }
         return employee;
     }
 
-    public IEmployee FindById(string id)//Id being username in this case
-    {
-        logger.Info($"Finding employee by ID (username): {id}");
-        using (var connection = DatabaseUtils.GetConnection())
-        {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM employees WHERE username = @id", connection);
-            command.Parameters.AddWithValue("@id", id);
-
-            using (var reader = command.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    return new Employee(reader.GetString("username"), reader.GetString("password"));
-                }
-            }
+    public IEmployee FindById(string id) {
+        using (var context = new BasketballContext()) {
+            return context.Employees.Find(id); // .Find() automatically looks for the [Key]
         }
-        return null;
     }
 
     public List<IEmployee> FindAll() {
-        
-        logger.Info($"Finding all employees");
-        List<IEmployee> employees = new List<IEmployee>();
-        using (var connection = DatabaseUtils.GetConnection()){
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM employees", connection);
-
-            using (var reader = command.ExecuteReader()){
-                while (reader.Read()){
-                    var employee= new Employee(reader.GetString("username"), reader.GetString("password"));
-                    employees.Add(employee);
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Employees.Cast<IEmployee>().ToList();
         }
-        return employees; 
     }
+
     public IEmployee Update(IEmployee employee) {
-        logger.Info($"Updating employee: {employee.username}");
-
-        using (var connection = DatabaseUtils.GetConnection()){
-            connection.Open();
-            var command = new MySqlCommand("UPDATE employees SET password=@pass WHERE username=@user", connection);
-            command.Parameters.AddWithValue("@user", employee.username);
-            command.Parameters.AddWithValue("@pass", employee.password);
-            command.ExecuteNonQuery();
+        using (var context = new BasketballContext()) {
+            context.Employees.Update((Employee)employee);
+            context.SaveChanges();
         }
-        return employee; 
+        return employee;
     }
-    public IEmployee Delete(string id){
-        logger.Info($"Deleting employee with ID (username): {id}");
-        using (var connection = DatabaseUtils.GetConnection()){
-            connection.Open();
-            var command = new MySqlCommand("DELETE FROM employees WHERE username=@id", connection);
-            command.Parameters.AddWithValue("@id", id);
-            command.ExecuteNonQuery();
-        }
 
-        return null; 
+    public IEmployee Delete(string id) {
+        using (var context = new BasketballContext()) {
+            var emp = context.Employees.Find(id);
+            if (emp != null) {
+                context.Employees.Remove(emp);
+                context.SaveChanges();
+            }
+            return emp;
+        }
     }
 }

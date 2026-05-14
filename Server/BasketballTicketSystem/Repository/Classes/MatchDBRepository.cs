@@ -1,174 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
-using MySqlConnector;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using NLog;
 
 public class MatchDBRepository : IMatchRepository {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    public MatchDBRepository() { logger.Info("Initializing MatchDBRepository"); }
+    public MatchDBRepository() { logger.Info("Initializing EF MatchDBRepository"); }
 
     public List<IMatch> FindAllAvailableMatchesOrderedDescending() {
-        logger.Info("Fetching all available matches ordered descending by seats.");
-        var matches = new List<IMatch>();
-
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM matches WHERE numberOfSeatsAvailable > 0 ORDER BY numberOfSeatsAvailable DESC", connection);
-
-            using (var reader = command.ExecuteReader()) {
-                while (reader.Read()) {
-                    matches.Add(
-                        new Match(
-                            reader.GetInt32("matchId"),
-                            reader.GetInt32("teamAId"),
-                            reader.GetInt32("teamBId"),
-                            reader.GetInt32("stadiumId"),
-                            reader.GetInt32("numberOfSeatsAvailable"),
-                            reader.GetFloat("ticketPrice")
-                        )
-                    );
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Matches
+                .Where(m => m.numberOfSeatsAvailable > 0)
+                .OrderByDescending(m => m.numberOfSeatsAvailable)
+                .Cast<IMatch>().ToList();
         }
-        return matches;
     }
 
     public List<IMatch> FindAvailableMatchesOrderedDescending(int minSeats) {
-        logger.Info("Fetching all matches that have more than {minSeats} seats, ordered descending by seats.");
-        var matches = new List<IMatch>();
-
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-
-            var command = new MySqlCommand("SELECT * FROM matches WHERE numberOfSeatsAvailable >= @minSeats ORDER BY numberOfSeatsAvailable DESC", connection);
-            command.Parameters.AddWithValue("@minSeats", minSeats);
-
-            using (var reader = command.ExecuteReader()) {
-                while (reader.Read()) {
-                    matches.Add(
-                        new Match(
-                            reader.GetInt32("matchId"),
-                            reader.GetInt32("teamAId"),
-                            reader.GetInt32("teamBId"),
-                            reader.GetInt32("stadiumId"),
-                            reader.GetInt32("numberOfSeatsAvailable"),
-                            reader.GetFloat("ticketPrice")
-                        )
-                    );
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Matches
+                .Where(m => m.numberOfSeatsAvailable >= minSeats)
+                .OrderByDescending(m => m.numberOfSeatsAvailable)
+                .Cast<IMatch>().ToList();
         }
-        return matches;
     }
 
-    public IMatch Add(IMatch match){
-        logger.Info($"Adding match: {match.matchId}");
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("INSERT INTO matches (matchId, teamAId, teamBId, stadiumId, numberOfSeatsAvailable, ticketPrice) VALUES (@matchId, @teamAId, @teamBId, @stadiumId, @numberOfSeatsAvailable, @ticketPrice)", connection);
-            command.Parameters.AddWithValue("@matchId", match.matchId);
-            command.Parameters.AddWithValue("@teamAId", match.teamAId);
-            command.Parameters.AddWithValue("@teamBId", match.teamBId);
-            command.Parameters.AddWithValue("@stadiumId", match.stadiumId);
-            command.Parameters.AddWithValue("@numberOfSeatsAvailable", match.numberOfSeatsAvailable);
-            command.Parameters.AddWithValue("@ticketPrice", match.ticketPrice);
-
-            command.ExecuteNonQuery();
+    public IMatch Add(IMatch match) {
+        using (var context = new BasketballContext()) {
+            context.Matches.Add((Match)match);
+            context.SaveChanges();
         }
-        return match; 
+        return match;
     }
+
     public IMatch FindById(int id) {
-        logger.Info("Fetching match with id: {id}");
-        var matches = new List<IMatch>();
-
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("SELECT * FROM matches WHERE matchId = @matchId", connection);
-            command.Parameters.AddWithValue("@matchId", id);
-
-            using (var reader = command.ExecuteReader()) {
-                while (reader.Read()) {
-                    return new Match(
-                        reader.GetInt32("matchId"),
-                        reader.GetInt32("teamAId"),
-                        reader.GetInt32("teamBId"),
-                        reader.GetInt32("stadiumId"),
-                        reader.GetInt32("numberOfSeatsAvailable"),
-                        reader.GetFloat("ticketPrice")
-                    );
-                    
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Matches.Find(id);
         }
-        return null;
     }
+
     public List<IMatch> FindAll() {
-        /* SELECT * FROM Matches... */
-        logger.Info("Fetching all matches.");
-        var matches = new List<IMatch>();
-
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-
-            var command = new MySqlCommand("SELECT * FROM matches" , connection);
-
-            using (var reader = command.ExecuteReader()) {
-                while (reader.Read()) {
-                    matches.Add(
-                        new Match(
-                            reader.GetInt32("matchId"),
-                            reader.GetInt32("teamAId"),
-                            reader.GetInt32("teamBId"),
-                            reader.GetInt32("stadiumId"),
-                            reader.GetInt32("numberOfSeatsAvailable"),
-                            reader.GetFloat("ticketPrice")
-                        )
-                    );
-                }
-            }
+        using (var context = new BasketballContext()) {
+            return context.Matches.Cast<IMatch>().ToList();
         }
-        return matches;
     }
 
     public IMatch Update(IMatch match) {
-        //i do not know if i should make it update all the fields or just the number of seats available, but for the moment i will leave it as is 
-        logger.Info($"Updating match {match.matchId}");
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            
-            var command = new MySqlCommand("UPDATE Matches SET numberOfSeatsAvailable = @seats WHERE matchId = @id", connection);
-            command.Parameters.AddWithValue("@seats", match.numberOfSeatsAvailable);
-            command.Parameters.AddWithValue("@id", match.matchId);
-            command.ExecuteNonQuery();
+        using (var context = new BasketballContext()) {
+            context.Matches.Update((Match)match);
+            context.SaveChanges();
         }
         return match;
     }
 
     public IMatch Delete(int id) {
-        logger.Info($"Attempting to delete match ID: {id}");
-
-        IMatch deletedMatch = FindById(id);
-        if (deletedMatch == null) return null;
-
-        using (var connection = DatabaseUtils.GetConnection()) {
-            connection.Open();
-            var command = new MySqlCommand("DELETE FROM Matches WHERE matchId = @id", connection);
-            command.Parameters.AddWithValue("@id", id);
+        using (var context = new BasketballContext()) {
+            var match = context.Matches.Find(id);
+            if (match == null) return null;
 
             try {
-                command.ExecuteNonQuery();
-                logger.Info("Match deleted successfully.");
-                return deletedMatch;
+                context.Matches.Remove(match);
+                context.SaveChanges();
+                return match;
             }
-            catch (MySqlException ex) {
-                // code 1451 is MySQL code for a FK constraint violation
-                if (ex.Number == 1451) {
-                    logger.Error($"Cannot delete Match {id} because tickets have already been sold for it.");
-                    // useful for UI to throw this exception
-                    throw new Exception("Cannot delete this match. Tickets exist.");
-                }
-                throw; // rethrow if it's a different database error
+            catch (DbUpdateException) {
+                // If EF Core throws an exception saving the deletion, it's likely the FK constraint
+                logger.Error($"Cannot delete Match {id} because tickets exist.");
+                throw new Exception("Cannot delete this match. Tickets exist.");
             }
         }
     }
