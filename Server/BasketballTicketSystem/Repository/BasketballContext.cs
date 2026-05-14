@@ -12,7 +12,7 @@ public class BasketballContext : DbContext {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         if (!optionsBuilder.IsConfigured) {
             // We retrieve the connection string from existing App.config
-            string connectionString = ConfigurationManager.ConnectionStrings["BasketballTicketsDB"].ConnectionString;
+            string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["BasketballTicketsDB"].ConnectionString;
 
             // Pomelo requires us to specify the MySQL server version
             var serverVersion = ServerVersion.AutoDetect(connectionString);

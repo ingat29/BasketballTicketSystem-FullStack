@@ -1,62 +1,64 @@
-﻿using BasketballTicketSystem.Networking.Protobuf;
-using Google.Protobuf;
-using System;
-using System.Net;
-using System.Net.Sockets;
+﻿// Commented out, since the code is now deprecated by using REST 
 
-class TestProgram {
+//using BasketballTicketSystem.Networking.Protobuf;
+//using Google.Protobuf;
+//using System;
+//using System.Net;
+//using System.Net.Sockets;
 
-    //A "Hello world" of the protobuf world 
-    public class SocketTest {
-        public static void RunServer() {
-            TcpListener listener = new TcpListener(IPAddress.Any, 5555);
-            listener.Start();
-            Console.WriteLine("Server started on port 5555. Waiting for a client...");
+//class TestProgram {
 
-            // Pauses here until a client connects!
-            TcpClient client = listener.AcceptTcpClient();
-            Console.WriteLine("A Java client connected!");
-            NetworkStream stream = client.GetStream();
+//    //A "Hello world" of the protobuf world 
+//    public class SocketTest {
+//        public static void RunServer() {
+//            TcpListener listener = new TcpListener(IPAddress.Any, 5555);
+//            listener.Start();
+//            Console.WriteLine("Server started on port 5555. Waiting for a client...");
 
-            // Wait for the client to send a Request
-            Request incomingRequest = Request.Parser.ParseDelimitedFrom(stream);
+//            // Pauses here until a client connects!
+//            TcpClient client = listener.AcceptTcpClient();
+//            Console.WriteLine("A Java client connected!");
+//            NetworkStream stream = client.GetStream();
 
-            Console.WriteLine($"The client sent a: {incomingRequest.PayloadCase}");
-            if (incomingRequest.PayloadCase == Request.PayloadOneofCase.Login) {
-                Console.WriteLine($"Username: {incomingRequest.Login.Username}");
-            }
+//            // Wait for the client to send a Request
+//            Request incomingRequest = Request.Parser.ParseDelimitedFrom(stream);
 
-            // Send a Response back
-            Response response = new Response {
-                Login = new LoginResponse {
-                    Success = true,
-                    ErrorMessage = "Hello from the C# Server!"
-                }
-            };
+//            Console.WriteLine($"The client sent a: {incomingRequest.PayloadCase}");
+//            if (incomingRequest.PayloadCase == Request.PayloadOneofCase.Login) {
+//                Console.WriteLine($"Username: {incomingRequest.Login.Username}");
+//            }
 
-            response.WriteDelimitedTo(stream);
-            Console.WriteLine("Response sent back to client.");
-        }
-    }
+//            // Send a Response back
+//            Response response = new Response {
+//                Login = new LoginResponse {
+//                    Success = true,
+//                    ErrorMessage = "Hello from the C# Server!"
+//                }
+//            };
 
-    //static void Main(string[] args) {
-    //    Console.WriteLine("Starting Database Test");
+//            response.WriteDelimitedTo(stream);
+//            Console.WriteLine("Response sent back to client.");
+//        }
+//    }
 
-    //    try {
-    //        IEmployeeRepository employeeRepo = new EmployeeDBRepository();
+//    //static void Main(string[] args) {
+//    //    Console.WriteLine("Starting Database Test");
 
-    //        var employees = employeeRepo.FindAll();
+//    //    try {
+//    //        IEmployeeRepository employeeRepo = new EmployeeDBRepository();
 
-    //        Console.WriteLine($"Success! Connected to the database and found {employees.Count} employees.");
-    //        Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output.");
-        
-    //        SocketTest.RunServer();
-    //    }
-    //    catch (Exception ex) {
-    //        Console.WriteLine("Something went wrong:");
-    //        Console.WriteLine(ex.Message);
-    //    }
+//    //        var employees = employeeRepo.FindAll();
 
-    //    Console.ReadLine();
-    //}
-}
+//    //        Console.WriteLine($"Success! Connected to the database and found {employees.Count} employees.");
+//    //        Console.WriteLine("Check bin/Debug folder for the application.log file to see the NLog output.");
+
+//    //        SocketTest.RunServer();
+//    //    }
+//    //    catch (Exception ex) {
+//    //        Console.WriteLine("Something went wrong:");
+//    //        Console.WriteLine(ex.Message);
+//    //    }
+
+//    //    Console.ReadLine();
+//    //}
+//}

@@ -1,28 +1,33 @@
-﻿using System;
-using System.Threading;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace BasketballTicketSystem {
-    internal class Program {
-        static void Main(string[] args) {
-            Console.WriteLine("--- Basketball Ticket System Server ---");
-            Console.WriteLine("Initializing databases...");
+    public class Program {
+        public static void Main(string[] args) {
+            var builder = WebApplication.CreateBuilder(args);
 
-            IEmployeeRepository employeeRepo = new EmployeeDBRepository();
-            IMatchRepository matchRepo = new MatchDBRepository();
-            ITicketRepository ticketRepo = new TicketDBRepository();
-            ICustomerRepository customerRepo = new CustomerDBRepository();
-            ITeamRepository teamRepo = new TeamDBRepository();
-            IStadiumRepository stadiumRepo = new StadiumDBRepository();
+            // Add services to the container (Dependency Injection)
+            // This tells the framework to give a Controller the right repository when it asks for it.
+            builder.Services.AddControllers();
 
-            ServerApp server = new ServerApp(employeeRepo, matchRepo, ticketRepo, customerRepo, teamRepo, stadiumRepo);
+            builder.Services.AddScoped<IMatchRepository, MatchDBRepository>();
+            builder.Services.AddScoped<IEmployeeRepository, EmployeeDBRepository>();
+            builder.Services.AddScoped<ITicketRepository, TicketDBRepository>();
+            builder.Services.AddScoped<ICustomerRepository, CustomerDBRepository>();
+            builder.Services.AddScoped<ITeamRepository, TeamDBRepository>();
+            builder.Services.AddScoped<IStadiumRepository, StadiumDBRepository>();
 
-            Thread serverThread = new Thread(() => server.Start());
-            serverThread.Start();
+            var app = builder.Build();
 
-            Console.WriteLine("Server is running in the background.");
-            Console.WriteLine("Press [ENTER] to forcefully shut down the terminal...");
+            // Configure the HTTP request pipeline.
+            app.UseRouting();
 
-            Console.ReadLine();
+            // This maps incoming HTTP requests to your Controllers
+            app.MapControllers();
+
+            // Start the Web Server (By default, it will listen on localhost:5000)
+            app.Run();
         }
     }
 }
