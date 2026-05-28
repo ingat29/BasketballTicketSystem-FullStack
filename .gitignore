@@ -20,6 +20,22 @@ build/
 *.ipr
 out/
 
+### --- Web --- ###
+/basketball-ticket-web/node_modules/
+/basketball-ticket-web/package-lock.json
+/basketball-ticket-web/dist/
+/basketball-ticket-web/dist-ssr/
+/basketball-ticket-web/*.local
+
+/basketball-ticket-web/logs
+/basketball-ticket-web/*.log
+/basketball-ticket-web/npm-debug.log*
+/basketball-ticket-web/yarn-debug.log*
+/basketball-ticket-web/yarn-error.log*
+/basketball-ticket-web/pnpm-debug.log*
+/basketball-ticket-web/lerna-debug.log*
+
+
 ### --- Altele --- ###
 .vscode/
 .DS_Store

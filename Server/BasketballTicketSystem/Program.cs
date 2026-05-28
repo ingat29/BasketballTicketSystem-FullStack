@@ -11,6 +11,17 @@ namespace BasketballTicketSystem {
             // This tells the framework to give a Controller the right repository when it asks for it.
             builder.Services.AddControllers();
 
+            builder.Services.AddCors(options => {
+                options.AddPolicy("AllowReactClient", policy => {
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
+            builder.Services.AddSignalR();
+
             builder.Services.AddScoped<IMatchRepository, MatchDBRepository>();
             builder.Services.AddScoped<IEmployeeRepository, EmployeeDBRepository>();
             builder.Services.AddScoped<ITicketRepository, TicketDBRepository>();
@@ -23,8 +34,13 @@ namespace BasketballTicketSystem {
             // Configure the HTTP request pipeline.
             app.UseRouting();
 
+            //Configure CORS to allow requests from the React client
+            app.UseCors("AllowReactClient");
+
             // This maps incoming HTTP requests to your Controllers
             app.MapControllers();
+
+            app.MapHub<BasketballTicketSystem.Hubs.NotificationHub>("/notificationHub");
 
             // Start the Web Server (By default, it will listen on localhost:5000)
             app.Run();

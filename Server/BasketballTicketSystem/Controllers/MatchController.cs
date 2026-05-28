@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using BasketballTicketSystem.Hubs;
 using System;
 using System.Collections.Generic;
 
@@ -9,9 +11,15 @@ namespace BasketballTicketSystem.Controllers {
     [ApiController]
     public class MatchesController : ControllerBase {
         private readonly IMatchRepository _matchRepo;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public MatchesController(IMatchRepository matchRepo) {
+        public MatchesController(IMatchRepository matchRepo, IHubContext<NotificationHub> hubContext) {
             _matchRepo = matchRepo;
+            _hubContext = hubContext;
+        }
+
+        private async Task BroadcastChange(string changeType, object data) {
+            await _hubContext.Clients.All.SendAsync("MatchSystemChanged", new { Action = changeType, Payload = data });
         }
 
         // GET: api/matches
@@ -35,44 +43,44 @@ namespace BasketballTicketSystem.Controllers {
 
         // POST: api/matches
         [HttpPost]
-        public ActionResult<IMatch> CreateMatch([FromBody] Match newMatch) {
-            // The client should send JSON without a "matchId" 
+        public async Task<ActionResult<IMatch>> CreateMatch([FromBody] Match newMatch) {
             var createdMatch = _matchRepo.Add(newMatch);
 
-            // Returns an HTTP 201 (Created)
+            // BROADCAST THE ADD EVENT TO ALL BROWSERS
+            await BroadcastChange("ADD", createdMatch);
+
             return CreatedAtAction(nameof(GetMatchById), new { id = createdMatch.matchId }, createdMatch);
         }
 
-        // PUT: api/matches/id
         [HttpPut("{id}")]
-        public ActionResult<IMatch> UpdateMatch(int id, [FromBody] Match updatedMatch) {
-            if (id != updatedMatch.matchId) {
-                return BadRequest("The ID in the URL does not match the ID in the body."); // HTTP 400
-            }
-
+        public async Task<ActionResult<IMatch>> UpdateMatch(int id, [FromBody] Match updatedMatch) {
+            if (id != updatedMatch.matchId) return BadRequest();
             var existingMatch = _matchRepo.FindById(id);
-            if (existingMatch == null) {
-                return NotFound(); // HTTP 404
-            }
+            if (existingMatch == null) return NotFound();
 
             var result = _matchRepo.Update(updatedMatch);
-            return Ok(result); // HTTP 200
+
+            // BROADCAST THE MODIFICATION EVENT TO ALL BROWSERS
+            await BroadcastChange("MODIFY", result);
+
+            return Ok(result);
         }
 
-        // DELETE: api/matches/id
         [HttpDelete("{id}")]
-        public ActionResult DeleteMatch(int id) {
+        public async Task<ActionResult> DeleteMatch(int id) {
             var existingMatch = _matchRepo.FindById(id);
-            if (existingMatch == null) {
-                return NotFound(); // HTTP 404
-            }
+            if (existingMatch == null) return NotFound();
 
             try {
                 _matchRepo.Delete(id);
-                return NoContent(); // HTTP 204 (Delete)
+
+                // BROADCAST THE DELETION EVENT TO ALL BROWSERS
+                await BroadcastChange("DELETE", new { matchId = id });
+
+                return NoContent();
             }
             catch (Exception ex) {
-                return BadRequest(ex.Message); // HTTP 400
+                return BadRequest(ex.Message);
             }
         }
     }
